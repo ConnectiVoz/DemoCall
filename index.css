@@ -1,0 +1,6 @@
+/* Add this to your global CSS (e.g. index.css) */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
