@@ -99,7 +99,7 @@ export default function ContactCallPage() {
         method: "POST",
         headers: { accept: "application/json" },
       });
-      console.log(initRes)
+      console.log(initRes);
 
       if (!initRes.ok) throw new Error("Initiate call failed");
 
@@ -114,18 +114,18 @@ export default function ContactCallPage() {
           `https://rivoz.in/api/call-logs/get/${log_id}`,
           { headers: { "Content-Type": "application/json" } }
         );
-    
+
         if (logRes.ok) {
           const resData = await logRes.json();
-          console.log(resData)
+          console.log(resData);
           if (resData.status && resData.log) {
             callLog = resData.log;
 
-            // ✅ Sentiment integration
+            // Sentiment integration
             const sentiment = resData.sentiment || "Not available";
             callLog.sentiment = sentiment;
 
-            // ✅ Status handling
+            // Status handling
             if (callLog.status === "Ring") {
               setCallStatus("📞 Ringing...");
             }
@@ -142,7 +142,9 @@ export default function ContactCallPage() {
             }
 
             if (callLog.status === "Failed") {
-              setCallStatus("❌ Call not connected (user declined or no answer).");
+              setCallStatus(
+                "❌ Call not connected (user declined or no answer)."
+              );
               setLoading(false);
               break;
             }
@@ -163,6 +165,32 @@ export default function ContactCallPage() {
       toast.error("Something went wrong");
       setLoading(false);
     }
+  };
+  // --- Sentiment Summary Formatter ---
+  const formatSentiment = (sentiment) => {
+    if (!sentiment) return "Summary not available";
+
+    // Cut before Speaker A starts
+    const beforeSpeakerA = sentiment.split("Speaker A")[0];
+
+    // Tone
+    const toneMatch = beforeSpeakerA.match(
+      /Tone:\s*(.*?)(?=Sentiment|Overall|$)/i
+    );
+    const tone = toneMatch ? toneMatch[1].trim() : "Neutral";
+
+    // Sentiment
+    const sentiMatch = beforeSpeakerA.match(/Sentiment:\s*(.*?)(?=Overall|$)/i);
+    const senti = sentiMatch ? sentiMatch[1].trim() : "Neutral";
+
+    // Overall
+    const overallMatch = beforeSpeakerA.match(
+      /Overall Sentiment[:\s*]*\**"?([^"\n]*)/i
+    );
+    const overall = overallMatch ? overallMatch[1].trim() : "Neutral";
+
+    // Final single summary string
+    return `User was ${tone.toLowerCase()}, showing a ${senti.toLowerCase()} attitude. Overall sentiment is **${overall}**.`;
   };
 
   return (
@@ -192,7 +220,10 @@ export default function ContactCallPage() {
           className="flex-1 w-full"
         >
           <h2 className="text-4xl md:text-5xl font-extrabold mb-3 text-center md:text-left text-white">
-            Demo Call
+            Demo{" "}
+            <span className="text-4xl md:text-5xl font-extrabold mb-3 text-center md:text-left text-[#D0FF71]">
+              Call
+            </span>
           </h2>
           <p className="text-gray-300 mb-6 text-center md:text-left">
             Connect instantly with our{" "}
@@ -313,14 +344,10 @@ export default function ContactCallPage() {
                 <strong>End Time:</strong> {callLogs.end_time || "N/A"}
               </li>
               <li>
-                <strong className="text-orange-500">Sentiment:</strong>
-                <span className="text-gray-300 mt-1">
-                  {callLogs.sentiment
-                    ? callLogs.sentiment
-                        .match(/\*\*Overall Sentiment:\*\*(.*)/)?.[1]
-                        .trim() || ""
-                    : ""}
-                </span>
+                <strong className="text-orange-500">Sentiment Summary:</strong>
+                <p className="text-gray-300 mt-1 whitespace-pre-line">
+                  {formatSentiment(callLogs.sentiment)}
+                </p>
               </li>
             </ul>
 
@@ -337,29 +364,41 @@ export default function ContactCallPage() {
             )}
 
             {/* Transcript download */}
-            {callLogs.conversation && callLogs.conversation.length > 0 ? (
+            {callLogs?.conversation && callLogs.conversation.length > 0 ? (
               <button
                 onClick={() => {
                   const doc = new jsPDF();
-                  doc.setFontSize(12);
-                  doc.text("📄 Call Transcript", 10, 10);
+                  doc.setFontSize(14);
+                  doc.text("📄 Call Transcript", 10, 15);
 
-                  let y = 20;
-                  callLogs.conversation.forEach((msg) => {
+                  let y = 30;
+
+                  callLogs.conversation.forEach((msg, index) => {
+                    // AI / User prefix
+                    const prefix = msg.role === "assistant" ? "AI:" : "User:";
+
+                    // Wrap long text
                     const lines = doc.splitTextToSize(
-                      `${msg.role.toUpperCase()}: ${msg.content}`,
+                      `${prefix} ${msg.content}`,
                       180
                     );
-                    doc.text(lines, 10, y);
-                    y += lines.length * 10;
-                    if (y > 280) {
-                      doc.addPage();
-                      y = 20;
-                    }
+
+                    // Print each wrapped line
+                    lines.forEach((line) => {
+                      doc.text(line, 10, y);
+                      y += 8; // line spacing
+                      if (y > 280) {
+                        doc.addPage();
+                        y = 20;
+                      }
+                    });
                   });
 
+                  // Save PDF
                   doc.save(
-                    `Call_Transcript_${callLogs.first_name}_${callLogs.last_name}.pdf`
+                    `Call_Transcript_${callLogs.first_name || "Unknown"}_${
+                      callLogs.last_name || ""
+                    }.pdf`
                   );
                 }}
                 className="mt-3 px-4 py-2 bg-[#D0FF71] text-black rounded-lg font-semibold hover:scale-105 transition-transform duration-200"
