@@ -3,6 +3,8 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { motion } from "framer-motion";
 import jsPDF from "jspdf";
+import Header from "../components/Header";
+import Footer from '../components/Footer'
 
 export default function ContactCallPage() {
   const [loading, setLoading] = useState(false);
@@ -194,13 +196,14 @@ export default function ContactCallPage() {
   };
 
   return (
+    <>
+    <Header />
     <div className="min-h-screen flex items-center justify-center bg-black text-white relative overflow-hidden">
       <ToastContainer position="top-right" autoClose={3000} theme="dark" />
-
       {!isMobile && (
         <canvas
-          ref={canvasRef}
-          className="absolute inset-0 w-full h-full"
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full"
         ></canvas>
       )}
 
@@ -210,7 +213,7 @@ export default function ContactCallPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
         className="max-w-6xl w-full flex flex-col md:flex-row items-center justify-between 
-                   bg-white/2 backdrop-blur-lg border border-white/10 rounded-3xl shadow-2xl p-10 gap-10 z-10"
+        bg-white/2 backdrop-blur-lg border border-white/10 rounded-3xl shadow-2xl p-10 gap-10 z-10"
       >
         {/* Left: Form */}
         <motion.div
@@ -219,6 +222,9 @@ export default function ContactCallPage() {
           transition={{ duration: 1 }}
           className="flex-1 w-full"
         >
+          {/* <div className="mb-6 rounded-full border border-white/20 pb-4 text-center w-full"> */}
+        
+        {/* </div> */}
           <h2 className="text-4xl md:text-5xl font-extrabold mb-3 text-center md:text-left text-white">
             Demo{" "}
             <span className="text-4xl md:text-5xl font-extrabold mb-3 text-center md:text-left text-[#D0FF71]">
@@ -374,16 +380,16 @@ export default function ContactCallPage() {
                   let y = 30;
 
                   callLogs.conversation.forEach((msg, index) => {
-                    // AI / User prefix
+
                     const prefix = msg.role === "assistant" ? "AI:" : "User:";
 
-                    // Wrap long text
+                
                     const lines = doc.splitTextToSize(
                       `${prefix} ${msg.content}`,
                       180
                     );
 
-                    // Print each wrapped line
+          
                     lines.forEach((line) => {
                       doc.text(line, 10, y);
                       y += 8; // line spacing
@@ -393,8 +399,6 @@ export default function ContactCallPage() {
                       }
                     });
                   });
-
-                  // Save PDF
                   doc.save(
                     `Call_Transcript_${callLogs.first_name || "Unknown"}_${
                       callLogs.last_name || ""
@@ -419,5 +423,7 @@ export default function ContactCallPage() {
         </div>
       )}
     </div>
+  </>
   );
 }
+<Footer/>
