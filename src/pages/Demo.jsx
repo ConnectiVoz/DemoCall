@@ -15,6 +15,7 @@ export default function ContactCallPage() {
   const defaultAgentId = "01K2YEM51TC56JWFK65MHD3Q0Y";
   const defaultAgentName = "Health Insurance Agent";
 
+  const [agents, setAgents] = useState([]);
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
@@ -74,6 +75,35 @@ export default function ContactCallPage() {
 
     return () => cancelAnimationFrame(animationFrame);
   }, [isMobile]);
+
+  // Fetch agents from API
+  useEffect(() => {
+    const fetchAgents = async () => {
+      try {
+        const res = await fetch("https://3.95.238.222/api/bots/list", {
+          headers: { accept: "application/json" },
+        });
+        
+        if (!res.ok) throw new Error("Failed to fetch agents");
+
+        const data = await res.json();
+        
+        // filter only active agents
+        const activeAgents = (data || []).filter((agent) => agent.is_active === true);
+
+        setAgents(activeAgents);
+        if (activeAgents.length > 0) {
+          setForm((prev) => ({
+            ...prev,
+            agent_id: activeAgents[0].id, // set first active agent as default
+          }));
+        }
+      } catch (err) {
+        console.error("Error fetching agents:", err);
+      }
+    };
+    fetchAgents();
+  }, []);
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -278,12 +308,24 @@ export default function ContactCallPage() {
               className="w-full px-4 py-3 rounded-lg bg-black/40 border border-white/30 placeholder-gray-500 text-white focus:ring-2 focus:ring-white outline-none"
             />
 
-            <input
-              type="text"
-              value={defaultAgentName}
-              disabled
-              className="w-full px-4 py-3 rounded-lg bg-black/60 border border-white/30 text-gray-400 font-semibold cursor-not-allowed"
-            />
+            <select
+              name="agent_id"
+              value={form.agent_id}
+              onChange={handleChange}
+              disabled={loading}
+              className="w-full px-4 py-3 rounded-lg bg-black/40 border border-white/30 text-white focus:ring-2 focus:ring-white outline-none bg-black"
+            >
+              {agents.length > 0 ? (
+                agents.map((agent) => (
+                  <option key={agent.id} value={agent.id} className="bg-black text-white">
+                    {agent.bot_name}
+                  </option>
+                ))
+              ) : (
+                <option disabled>Loading agents...</option>
+              )}
+            </select>
+
 
             <button
               type="submit"
