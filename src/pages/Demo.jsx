@@ -80,7 +80,7 @@ export default function ContactCallPage() {
   useEffect(() => {
     const fetchAgents = async () => {
       try {
-        const res = await fetch("https://3.95.238.222/api/bots/list", {
+        const res = await fetch("https://rivoz.in/api/bots/list", {
           headers: { accept: "application/json" },
         });
         
