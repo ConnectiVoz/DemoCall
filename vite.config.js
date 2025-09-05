@@ -5,9 +5,15 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
-    allowedHosts: ['agent.ivoz.ai'], // 👈 allow your custom domain
-    host: '0.0.0.0',                 // optional: listen on all IPs
-    port: 5173,    
+    host: '0.0.0.0',
+    port: 5173,
+
+    // 👇 This is the correct way in Vite 5
+    allowedHosts: [
+      "agent.ivoz.ai",   // explicitly allow your domain
+      ".ivoz.ai"         // allow all subdomains of ivoz.ai (wildcard)
+    ],
+
     proxy: {
       "/api": {
         target: "https://agent.ivoz.ai",
